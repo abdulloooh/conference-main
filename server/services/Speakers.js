@@ -1,7 +1,9 @@
 const { default: axios } = require("axios");
 class SpeakersService {
-  constructor(datafile) {
-    this.datafile = datafile;
+  constructor({ data }) {
+    const { seviceRegistryUrl, serviceVersion } = data;
+    this.seviceRegistryUrl = seviceRegistryUrl;
+    this.serviceVersion = serviceVersion;
   }
 
   async getNames() {
@@ -53,16 +55,14 @@ class SpeakersService {
   }
 
   async callService(requestOptions) {
-    try {
-      const { data } = await axios(requestOptions);
-      return data;
-    } catch (err) {
-      console.log(err.message);
-    }
+    const { data } = await axios(requestOptions);
+    return data;
   }
 
   async getService(servicename) {
-    const { data } = await axios.get(`http://localhost:3080/find/${servicename}/1`);
+    const { data } = await axios.get(
+      `${this.seviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
+    );
     return data;
   }
 }
