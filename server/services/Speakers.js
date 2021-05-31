@@ -1,9 +1,17 @@
 const { default: axios } = require("axios");
 class SpeakersService {
-  constructor({ data }) {
-    const { seviceRegistryUrl, serviceVersion } = data;
+  constructor({ seviceRegistryUrl, serviceVersion }) {
     this.seviceRegistryUrl = seviceRegistryUrl;
     this.serviceVersion = serviceVersion;
+  }
+
+  async getImage(path) {
+    const { ip, port } = await this.getService("speakers-service");
+    return this.callService({
+      method: "get",
+      responseType: "stream",
+      url: `http://${ip}:${port}/images/${path}`,
+    });
   }
 
   async getNames() {
