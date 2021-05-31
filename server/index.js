@@ -57,6 +57,6 @@ app.use((err, req, res, next) => {
   return res.render("error");
 });
 
-app.listen(3080, () => console.log("port 3080 listening"));
+app.listen(3000, () => console.log("port 3000 listening"));
 
 module.export = app;
