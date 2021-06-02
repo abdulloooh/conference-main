@@ -1,3 +1,4 @@
+const axios = require("axios");
 class CircuitBreaker {
   constructor() {
     this.states = {};
@@ -23,6 +24,12 @@ class CircuitBreaker {
 
   canRequest(endpoint) {
     const state = this.states[endpoint];
+
+    if (!state) {
+      this.initState(endpoint);
+      return true;
+    }
+
     if (state.circuit === this.close) return true;
 
     //cooldown period completed
@@ -33,6 +40,24 @@ class CircuitBreaker {
     }
 
     return false;
+  }
+
+  async callService(requestOptions) {
+    const key = `${requestOptions.method}:${requestOptions.url}`;
+    const canRequest = this.canRequest(key);
+
+    if (!canRequest) return false;
+
+    try {
+      requestOptions.timeout = this.requestTimeout * 1000;
+      const { data } = await axios(requestOptions);
+      this.onSuccess(key);
+      return data;
+    } catch (error) {
+      console.error(`Error!- ${error.message}`);
+      this.onFailure(key);
+      return false;
+    }
   }
 
   onSuccess(endpoint) {
@@ -57,3 +82,5 @@ class CircuitBreaker {
     }
   }
 }
+
+module.exports = CircuitBreaker;

@@ -17,6 +17,11 @@ const feedback = new Feedback(config.data.feedback);
 app.set("view engine", "pug");
 if (app.get("env") === "development") {
   app.locals.pretty = true;
+
+  app.use((req, res, next) => {
+    console.log(`${req.method}:${req.url}`);
+    return next();
+  });
 }
 app.set("views", path.join(__dirname, "./views"));
 app.locals.title = config.sitename;
@@ -24,6 +29,8 @@ app.locals.title = config.sitename;
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));
+
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("/images/:type/:file", async (req, res) => {
   const imageStream = await speakers.getImage(`${req.params.type}/${req.params.file}`);
