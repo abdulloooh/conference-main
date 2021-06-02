@@ -26,12 +26,8 @@ class CircuitBreaker {
   }
 
   canRequest(endpoint) {
+    if (!this.states[endpoint]) this.initState(endpoint);
     const state = this.states[endpoint];
-
-    if (!state) {
-      this.initState(endpoint);
-      return true;
-    }
 
     if (state.circuit === this.close) {
       return true;
@@ -49,20 +45,17 @@ class CircuitBreaker {
 
   async callService(requestOptions) {
     const key = `${requestOptions.method}:${requestOptions.url}`;
-    const canRequest = this.canRequest(key);
 
-    if (!canRequest) return false;
+    if (!this.canRequest(key)) return false;
 
     try {
       requestOptions.timeout = this.requestTimeout * 1000;
       const { data } = await axios(requestOptions);
       this.onSuccess(key);
-
       return data;
     } catch (error) {
       this.log.error(error.message);
       this.onFailure(key);
-
       return false;
     }
   }

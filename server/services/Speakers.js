@@ -1,3 +1,5 @@
+const url = require("url");
+const crypto = require("crypto");
 const { default: axios } = require("axios");
 const CircuitBreaker = require("../lib/CircuitBreaker");
 class SpeakersService {
@@ -5,6 +7,8 @@ class SpeakersService {
     this.seviceRegistryUrl = seviceRegistryUrl;
     this.serviceVersion = serviceVersion;
     this.circuitBreaker = new CircuitBreaker(log);
+    this.cache = {};
+    this.log = log();
   }
 
   async getImage(path) {
@@ -65,7 +69,22 @@ class SpeakersService {
   }
 
   async callService(requestOptions) {
-    return await this.circuitBreaker.callService(requestOptions);
+    const servicePath = url.parse(requestOptions.url).path;
+    let cacheKey = requestOptions.method + servicePath;
+    cacheKey = crypto.createHash("md5").update(cacheKey).digest("hex");
+
+    let result = await this.circuitBreaker.callService(requestOptions);
+
+    //update cache
+    if (result) {
+      this.log.info("Caching...");
+      this.cache[cacheKey] = result;
+    } else {
+      this.log.info("Loading from Cache");
+      result = this.cache[cacheKey]; // fetch from cache if no result
+    }
+
+    return result; // could be from server/cache or even empty
   }
 
   async getService(servicename) {
