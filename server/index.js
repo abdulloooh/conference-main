@@ -15,13 +15,15 @@ const speakers = new Speakers(config);
 const feedback = new Feedback(config.data.feedback);
 
 app.set("view engine", "pug");
+const log = config.log();
+
 if (app.get("env") === "development") {
   app.locals.pretty = true;
 
-  app.use((req, res, next) => {
-    console.log(`${req.method}:${req.url}`);
-    return next();
-  });
+  // app.use((req, res, next) => {
+  //   log.debug(`${req.method}:${req.url}`);
+  //   return next();
+  // });
 }
 app.set("views", path.join(__dirname, "./views"));
 app.locals.title = config.sitename;
@@ -67,6 +69,6 @@ app.use((err, req, res, next) => {
   return res.render("error");
 });
 
-app.listen(3000, () => console.log("port 3000 listening"));
+app.listen(3000, () => log.info("port 3000 listening"));
 
 module.export = app;

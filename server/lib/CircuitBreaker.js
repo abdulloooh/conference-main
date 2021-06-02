@@ -1,16 +1,19 @@
 const axios = require("axios");
 class CircuitBreaker {
-  constructor() {
-    this.states = {};
-    //unit in s
-    this.requestTimeout = 2;
-    this.cooldownPeriod = 5;
+  constructor(log) {
+    this.log = log();
 
-    this.failureThreshold = 5; // 5 units
+    this.states = {};
+
+    //unit in s
+    this.requestTimeout = 5;
+    this.cooldownPeriod = 15;
+
+    this.failureThreshold = 3;
 
     // labels
     this.close = "CLOSED";
-    this.open = "OPEND";
+    this.open = "OPENED";
     this.halfOpen = "HALF-OPEN";
   }
 
@@ -30,7 +33,9 @@ class CircuitBreaker {
       return true;
     }
 
-    if (state.circuit === this.close) return true;
+    if (state.circuit === this.close) {
+      return true;
+    }
 
     //cooldown period completed
     const now = Date.now() / 1000;
@@ -52,10 +57,12 @@ class CircuitBreaker {
       requestOptions.timeout = this.requestTimeout * 1000;
       const { data } = await axios(requestOptions);
       this.onSuccess(key);
+
       return data;
     } catch (error) {
-      console.error(`Error!- ${error.message}`);
+      this.log.error(error.message);
       this.onFailure(key);
+
       return false;
     }
   }
@@ -70,17 +77,23 @@ class CircuitBreaker {
     if (state.circuit === this.halfOpen) {
       state.circuit = this.open;
       state.nextTry = Date.now() / 1000 + this.cooldownPeriod;
-      console.error(`ALERT! Cricuit for ${endpoint} in 'OPEN' state`);
+      this.log.warn(`ALERT! Cricuit for ${endpoint} in 'OPEN' state`);
     } else {
       state.failures++;
 
       if (state.failures > this.failureThreshold) {
         state.circuit = this.open;
         state.nextTry = Date.now() / 1000 + this.cooldownPeriod;
-        console.error(`ALERT! Cricuit for ${endpoint} in 'OPEN' state`);
+        this.log.warn(`ALERT! Cricuit for ${endpoint} in 'OPEN' state`);
       }
     }
   }
 }
 
 module.exports = CircuitBreaker;
+
+/**
+ * Tracking for a pacrticular endpoint
+ *   if (endpoint === "get:http://[::ffff:127.0.0.1]:35337/list")
+        console.log({ state: "%%%%%%", endpoint });
+ */
