@@ -11,8 +11,8 @@ class FeedbackService {
   async addEntry(name, title, message) {
     const { ip, port } = await this.getService();
     return await this.callService({
-      method: "GET",
-      url: `${ip}:${port}/list`,
+      method: "POST",
+      url: `http://${ip}:${port}/add-entry`,
       data: { name, title, message },
     });
   }
@@ -26,21 +26,21 @@ class FeedbackService {
   }
 
   async callService(requestOptions) {
-    const { data } = await axios(requestOptions);
-    return data;
+    try {
+      const { data } = await axios(requestOptions);
+      return data;
+    } catch (err) {
+      this.log.error(err.message);
+      return false;
+    }
   }
 
   async getService(_servicename) {
-    try {
-      const servicename = _servicename || this.defaultServiceName;
-      const { data } = await axios.get(
-        `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
-      );
-      return data;
-    } catch (err) {
-      this.log.error(err);
-      return false;
-    }
+    const servicename = _servicename || this.defaultServiceName;
+    const { data } = await axios.get(
+      `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
+    );
+    return data;
   }
 }
 
