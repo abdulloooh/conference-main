@@ -13,20 +13,18 @@ const getLogger = (serviceName, serviceVersion, level) =>
 module.exports = {
   development: {
     sitename: "Roux Meetups [Development]",
-    seviceRegistryUrl: "http://localhost:3080",
+    serviceRegistryUrl: "http://localhost:3080",
     serviceVersion: "1.x.x",
     data: {
-      feedback: path.join(__dirname, "../data/feedback.json"),
       imagecache: path.join(__dirname, "../../_imagecache"),
     },
     log: () => getLogger(name, version, "debug"),
   },
   production: {
     sitename: "Roux Meetups",
-    seviceRegistryUrl: "http://localhost:3080",
+    serviceRegistryUrl: "http://localhost:3080",
     serviceVersion: "1.x.x",
     data: {
-      feedback: path.join(__dirname, "../data/feedback.json"),
       imagecache: path.join(__dirname, "../../_imagecache"),
     },
     log: () => getLogger(name, version, "info"),

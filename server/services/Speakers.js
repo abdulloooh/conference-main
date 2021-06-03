@@ -9,8 +9,8 @@ const exists = promisify(fs.exists);
 
 const CircuitBreaker = require("../lib/CircuitBreaker");
 class SpeakersService {
-  constructor({ seviceRegistryUrl, serviceVersion, log, data }) {
-    this.seviceRegistryUrl = seviceRegistryUrl;
+  constructor({ serviceRegistryUrl, serviceVersion, log, data }) {
+    this.serviceRegistryUrl = serviceRegistryUrl;
     this.serviceVersion = serviceVersion;
     this.circuitBreaker = new CircuitBreaker(log);
     this.cache = {};
@@ -107,7 +107,7 @@ class SpeakersService {
 
   async getService(servicename) {
     const { data } = await axios.get(
-      `${this.seviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
+      `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
     );
     return data;
   }

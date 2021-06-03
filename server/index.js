@@ -9,10 +9,10 @@ const routes = require("./routes");
 
 const app = express();
 
-const config = configs[app.get("env")];
+const config = configs[app.get("env") || "development"];
 
 const speakers = new Speakers(config);
-const feedback = new Feedback(config.data.feedback);
+const feedback = new Feedback(config);
 
 app.set("view engine", "pug");
 const log = config.log();

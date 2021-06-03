@@ -1,29 +1,46 @@
-const fs = require('fs');
-const util = require('util');
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
+const { default: axios } = require("axios");
 
 class FeedbackService {
-  constructor(datafile) {
-    this.datafile = datafile;
+  constructor({ serviceRegistryUrl, serviceVersion, log }) {
+    this.serviceRegistryUrl = serviceRegistryUrl;
+    this.serviceVersion = serviceVersion;
+    this.log = log();
+    this.defaultServiceName = "feedback-service";
   }
 
   async addEntry(name, title, message) {
-    const data = await this.getData();
-    data.unshift({ name, title, message });
-    return writeFile(this.datafile, JSON.stringify(data));
+    const { ip, port } = await this.getService();
+    return await this.callService({
+      method: "GET",
+      url: `${ip}:${port}/list`,
+      data: { name, title, message },
+    });
   }
 
   async getList() {
-    const data = await this.getData();
+    const { ip, port } = await this.getService();
+    return await this.callService({
+      method: "GET",
+      url: `http://${ip}:${port}/list`,
+    });
+  }
+
+  async callService(requestOptions) {
+    const { data } = await axios(requestOptions);
     return data;
   }
 
-  async getData() {
-    const data = await readFile(this.datafile, 'utf8');
-    if (!data) return [];
-    return JSON.parse(data);
+  async getService(_servicename) {
+    try {
+      const servicename = _servicename || this.defaultServiceName;
+      const { data } = await axios.get(
+        `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
+      );
+      return data;
+    } catch (err) {
+      this.log.error(err);
+      return false;
+    }
   }
 }
 
