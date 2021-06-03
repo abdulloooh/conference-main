@@ -5,13 +5,12 @@ const crypto = require("crypto");
 
 const CircuitBreaker = require("../lib/CircuitBreaker");
 
-const circuitBreaker = new CircuitBreaker();
-
 class FeedbackService {
-  constructor({ serviceRegistryUrl, serviceVersionIdentifier }) {
-    this.serviceVersionIdentifier = serviceVersionIdentifier;
+  constructor({ serviceRegistryUrl, serviceVersion, log }) {
+    this.serviceVersion = serviceVersion;
     this.serviceRegistryUrl = serviceRegistryUrl;
     this.cache = {};
+    this.circuitBreaker = new CircuitBreaker(log);
   }
 
   async getList() {
@@ -29,7 +28,7 @@ class FeedbackService {
       .update(requestOptions.method + parsedUrl.path)
       .digest("hex");
 
-    const result = await circuitBreaker.callService(requestOptions);
+    const result = await this.circuitBreaker.callService(requestOptions);
 
     if (!result) {
       if (this.cache[cacheKey]) {
@@ -46,7 +45,7 @@ class FeedbackService {
 
   async getService(servicename) {
     const response = await axios.get(
-      `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersionIdentifier}`
+      `${this.serviceRegistryUrl}/find/${servicename}/${this.serviceVersion}`
     );
     return response.data;
   }
