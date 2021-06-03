@@ -17,6 +17,7 @@ module.exports = {
     serviceVersion: "1.x.x",
     data: {
       feedback: path.join(__dirname, "../data/feedback.json"),
+      imagecache: path.join(__dirname, "../../_imagecache"),
     },
     log: () => getLogger(name, version, "debug"),
   },
@@ -26,6 +27,7 @@ module.exports = {
     serviceVersion: "1.x.x",
     data: {
       feedback: path.join(__dirname, "../data/feedback.json"),
+      imagecache: path.join(__dirname, "../../_imagecache"),
     },
     log: () => getLogger(name, version, "info"),
   },

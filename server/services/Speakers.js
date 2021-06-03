@@ -1,14 +1,21 @@
 const url = require("url");
 const crypto = require("crypto");
 const { default: axios } = require("axios");
+
+const fs = require("fs");
+const { promisify } = require("util");
+const mkdir = promisify(fs.mkdir);
+const exists = promisify(fs.exists);
+
 const CircuitBreaker = require("../lib/CircuitBreaker");
 class SpeakersService {
-  constructor({ seviceRegistryUrl, serviceVersion, log }) {
+  constructor({ seviceRegistryUrl, serviceVersion, log, data }) {
     this.seviceRegistryUrl = seviceRegistryUrl;
     this.serviceVersion = serviceVersion;
     this.circuitBreaker = new CircuitBreaker(log);
     this.cache = {};
     this.log = log();
+    this.imagecache = data.imagecache;
   }
 
   async getImage(path) {
@@ -70,18 +77,29 @@ class SpeakersService {
 
   async callService(requestOptions) {
     const servicePath = url.parse(requestOptions.url).path;
-    let cacheKey = requestOptions.method + servicePath;
-    cacheKey = crypto.createHash("md5").update(cacheKey).digest("hex");
+    const cacheKey = crypto
+      .createHash("md5")
+      .update(requestOptions.method + servicePath)
+      .digest("hex");
+
+    if (!(await exists(this.imagecache))) await mkdir(this.imagecache);
+
+    let cacheFile = null;
+    if (requestOptions.responseType && requestOptions.responseType === "stream")
+      cacheFile = `${this.imagecache}/${cacheKey}`;
 
     let result = await this.circuitBreaker.callService(requestOptions);
 
     //update cache
     if (result) {
-      this.log.info("Caching...");
-      this.cache[cacheKey] = result;
+      if (cacheFile) {
+        const ws = fs.createWriteStream(cacheFile);
+        result.pipe(ws);
+      } else this.cache[cacheKey] = result;
     } else {
       this.log.info("Loading from Cache");
-      result = this.cache[cacheKey]; // fetch from cache if no result
+      if (cacheFile) return fs.createReadStream(cacheFile);
+      else result = this.cache[cacheKey]; // fetch from cache if no result
     }
 
     return result; // could be from server/cache or even empty
