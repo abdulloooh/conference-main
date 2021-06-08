@@ -82,9 +82,12 @@ class SpeakersService {
       .update(requestOptions.method + servicePath)
       .digest("hex");
 
+    //create file cache if not exists  [other one is object cache]
     if (!(await exists(this.imagecache))) await mkdir(this.imagecache);
 
     let cacheFile = null;
+
+    //for streams (file cache)
     if (requestOptions.responseType && requestOptions.responseType === "stream")
       cacheFile = `${this.imagecache}/${cacheKey}`;
 
@@ -95,7 +98,7 @@ class SpeakersService {
       if (cacheFile) {
         const ws = fs.createWriteStream(cacheFile);
         result.pipe(ws);
-      } else this.cache[cacheKey] = result;
+      } else this.cache[cacheKey] = result; //object cache
     } else {
       this.log.info("Loading from Cache");
       if (cacheFile) return fs.createReadStream(cacheFile);

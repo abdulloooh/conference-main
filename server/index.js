@@ -29,6 +29,7 @@ app.set("views", path.join(__dirname, "./views"));
 app.locals.title = config.sitename;
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));
 
